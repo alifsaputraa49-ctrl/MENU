@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pesanan Masuk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="font-sans min-h-screen bg-gradient-to-br from-gray-100 via-green-100 to-green-200 relative p-6">
+
+<!-- Pola dekorasi -->
+<div class="absolute inset-0 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/symphony.png')] opacity-20"></div>
+
+<!-- Konten utama -->
+<div class="relative z-10">
+  <h1 class="text-4xl font-extrabold text-center text-green-700 mb-8 animate-pulse">📋 Pesanan Masuk</h1>
+  <div id="daftar-pesanan" class="space-y-6 max-w-3xl mx-auto mb-10"></div>
+
+  <h2 class="text-2xl font-bold text-center text-green-800 mb-4">📦 Riwayat Pesanan</h2>
+  <div id="riwayat-pesanan" class="space-y-4 max-w-3xl mx-auto"></div>
+
+  <!-- Total Pendapatan -->
+  <div class="max-w-3xl mx-auto mt-6 p-4 bg-white rounded-lg shadow text-right flex justify-between items-center">
+    <p class="text-xl font-bold">💰 Total Pendapatan: Rp <span id="total-pendapatan">0</span></p>
+    <button onclick="resetRiwayat()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+      Reset Riwayat
+    </button>
+  </div>
+</div>
+
+<!-- Notifikasi suara -->
+<audio id="notifSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+<script>
+let semuaPesananLama = [];
+let riwayat = JSON.parse(localStorage.getItem("riwayat")) || [];
+
+function tampilkanPesanan() {
+  const container = document.getElementById("daftar-pesanan");
+  container.innerHTML = "";
+
+  let semuaPesanan = JSON.parse(localStorage.getItem("pesanan")) || [];
+
+  // cek pesanan baru
+  if (semuaPesanan.length > semuaPesananLama.length) {
+    document.getElementById("notifSound").play();
+  }
+  semuaPesananLama = semuaPesanan;
+
+  if (semuaPesanan.length === 0) {
+    container.innerHTML = `<p class="text-center text-gray-500">Belum ada pesanan masuk.</p>`;
+    return;
+  }
+
+  semuaPesanan.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "bg-white rounded-xl shadow-lg p-6 flex justify-between items-center hover:scale-105 hover:shadow-xl transition transform duration-200";
+
+    card.innerHTML = `
+      <div>
+        <p class="text-lg font-bold text-green-700">${p.nama} <span class="text-gray-500">(Meja ${p.meja})</span></p>
+        <p class="text-gray-700 mt-1">${p.items.join(", ")}</p>
+        <p class="mt-2 font-semibold text-gray-800">Total: Rp ${p.total}</p>
+      </div>
+      <button onclick="selesaiPesanan(${p.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg">
+        Selesai
+      </button>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function selesaiPesanan(id) {
+  let semuaPesanan = JSON.parse(localStorage.getItem("pesanan")) || [];
+  const pesananSelesai = semuaPesanan.find(p => p.id === id);
+
+  if (pesananSelesai) {
+    // tambahkan ke riwayat
+    riwayat.push(pesananSelesai);
+    localStorage.setItem("riwayat", JSON.stringify(riwayat));
+  }
+
+  // hapus dari pesanan aktif
+  semuaPesanan = semuaPesanan.filter(p => p.id !== id);
+  localStorage.setItem("pesanan", JSON.stringify(semuaPesanan));
+
+  tampilkanPesanan();
+  tampilkanRiwayat();
+}
+
+function tampilkanRiwayat() {
+  const container = document.getElementById("riwayat-pesanan");
+  container.innerHTML = "";
+
+  let totalPendapatan = 0;
+
+  if (riwayat.length === 0) {
+    container.innerHTML = `<p class="text-center text-gray-500">Belum ada riwayat pesanan.</p>`;
+    document.getElementById("total-pendapatan").innerText = 0;
+    return;
+  }
+
+  riwayat.forEach(p => {
+    totalPendapatan += p.total;
+
+    const card = document.createElement("div");
+    card.className = "bg-green-50 border-l-4 border-green-500 p-4 rounded shadow";
+
+    card.innerHTML = `
+      <p><strong>${p.nama}</strong> (Meja ${p.meja})</p>
+      <p>${p.items.join(", ")}</p>
+      <p class="font-semibold">Total: Rp ${p.total}</p>
+    `;
+
+    container.appendChild(card);
+  });
+
+  document.getElementById("total-pendapatan").innerText = totalPendapatan;
+}
+
+function resetRiwayat() {
+  if (confirm("Apakah Anda yakin ingin mereset riwayat pesanan dan pendapatan?")) {
+    riwayat = [];
+    localStorage.setItem("riwayat", JSON.stringify(riwayat));
+    tampilkanRiwayat();
+  }
+}
+
+// auto refresh setiap 2 detik
+setInterval(tampilkanPesanan, 2000);
+setInterval(tampilkanRiwayat, 2000);
+
+// load awal
+tampilkanPesanan();
+tampilkanRiwayat();
+</script>
+
+</body>
+</html>
+
+</body>
+</html>
